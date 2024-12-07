@@ -1,0 +1,55 @@
+# npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth ## only run the first time 
+
+
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+
+// Add the stealth plugin to evade detection
+puppeteer.use(StealthPlugin());
+
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: false, // Set to `true` to run headless (without a browser UI)
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+
+  const page = await browser.newPage();
+
+  // Example website to search on (you can change this to your desired website)
+  const websiteURL = 'https://www.google.com';
+  const searchTerm = '("YOUR TEXT HERE")'; // Replace with your search term
+
+  try {
+    // Navigate to the website
+    await page.goto(websiteURL, { waitUntil: 'networkidle2' });
+
+    // Wait for the search box to appear and type the search term
+    await page.waitForSelector('input[name="q"]'); // Adjust selector for the specific website
+    await page.type('input[name="q"]', searchTerm, { delay: 100 });
+
+    // Submit the search form
+    await page.keyboard.press('Enter');
+
+    // Wait for search results to load
+    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+    // Scrape search results (Adjust selectors as needed for the website structure)
+    const results = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a')).map((link) => ({
+        text: link.innerText,
+        href: link.href,
+      }));
+      return links;
+    });
+
+    console.log('Search Results:', results);
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+  } finally {
+    await browser.close();
+  }
+})();
+
+# start search - node searchBot.j
+  
